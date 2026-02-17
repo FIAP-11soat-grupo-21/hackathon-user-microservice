@@ -1,0 +1,161 @@
+package database
+
+import (
+	"fmt"
+	"log"
+	"os"
+	"user_microservice/internal/adapter/driven/database/model"
+	"user_microservice/internal/common/config/env"
+
+	"sync"
+	"time"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+)
+
+var (
+	dbConnection *gorm.DB
+	instance     *gorm.DB
+	once         sync.Once
+)
+
+func GetDB() *gorm.DB {
+	once.Do(func() {
+		instance = dbConnection
+	})
+	return instance
+}
+
+func Connect() {
+	if dbConnection != nil {
+		log.Println("Database connection already established")
+		return
+	}
+
+	config := env.GetConfig()
+
+	if err := ensureDatabaseExists(config); err != nil {
+		log.Fatalf("Failed to ensure database exists: %v", err)
+	}
+
+	dsn := "host=" + config.Database.Host +
+		" user=" + config.Database.Username +
+		" dbname=" + config.Database.Name +
+		" password=" + config.Database.Password +
+		" port=" + config.Database.Port
+
+	queryLogLevel := logger.Info
+
+	if config.IsProduction() {
+		queryLogLevel = logger.Error
+	}
+
+	queryLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags),
+		logger.Config{
+			SlowThreshold:             time.Second,   // Limite para considerar uma query como lenta
+			LogLevel:                  queryLogLevel, // Nível de log (Info mostra todas as queries, Error mostra apenas erros)
+			IgnoreRecordNotFoundError: false,         // Mostrar erro para registros não encontrados
+			Colorful:                  true,          // Saída colorida no terminal
+		},
+	)
+
+	var db *gorm.DB
+	var err error
+	maxRetries := 5
+	retryInterval := 2 * time.Second
+
+	for i := range maxRetries {
+		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+			Logger: queryLogger,
+		})
+
+		if err == nil {
+			break
+		}
+
+		log.Printf("Failed to connect to database (attempt %d/%d): %v", i+1, maxRetries, err)
+		time.Sleep(retryInterval)
+	}
+
+	if err != nil {
+		log.Fatal("Failed to connect to database")
+	}
+
+	dbConnection = db
+}
+
+func ensureDatabaseExists(config *env.Config) error {
+	adminDBName := "postgres" // banco padrão de administração no PostgreSQL
+
+	adminDSN := "host=" + config.Database.Host +
+		" user=" + config.Database.Username +
+		" dbname=" + adminDBName +
+		" password=" + config.Database.Password +
+		" port=" + config.Database.Port
+
+	adminDB, err := gorm.Open(postgres.Open(adminDSN), &gorm.Config{})
+	if err != nil {
+		return fmt.Errorf("could not connect to admin database (%s): %w", adminDBName, err)
+	}
+
+	sqlDB, err := adminDB.DB()
+	if err != nil {
+		return fmt.Errorf("could not get admin database handle: %w", err)
+	}
+	defer sqlDB.Close()
+
+	targetDB := config.Database.Name
+	if targetDB == "" {
+		return fmt.Errorf("target database name is empty")
+	}
+
+	var count int64
+	if err := adminDB.
+		Raw("SELECT COUNT(*) FROM pg_database WHERE datname = ?", targetDB).
+		Scan(&count).Error; err != nil {
+		return fmt.Errorf("failed to check if database exists: %w", err)
+	}
+
+	if count > 0 {
+		return nil
+	}
+
+	createStmt := fmt.Sprintf("CREATE DATABASE \"%s\"", targetDB)
+	if err := adminDB.Exec(createStmt).Error; err != nil {
+		return fmt.Errorf("failed to create database %s: %w", targetDB, err)
+	}
+
+	log.Printf("Database %s created successfully", targetDB)
+	return nil
+}
+
+func Close() {
+	if dbConnection == nil {
+		log.Println("Database connection already closed")
+		return
+	}
+
+	sqlDriver, err := dbConnection.DB()
+
+	if err != nil {
+		log.Fatal("Failed to close database")
+	}
+
+	sqlDriver.Close()
+}
+
+func RunMigrations() {
+	if dbConnection == nil {
+		log.Println("Database connection is not initialized")
+		return
+	}
+
+	if err := dbConnection.AutoMigrate(
+		&model.UserModel{},
+	); err != nil {
+		log.Fatalf("Failed to run migrations: %v", err)
+	}
+}
