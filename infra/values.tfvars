@@ -11,6 +11,8 @@ container_environment_variables = {
   API_PORT : "8083"
   API_HOST : "0.0.0.0"
 
+  PASSWORD_SALT : "12"
+
   AWS_REGION : "us-east-2"
 
   DB_RUN_MIGRATIONS : "true"
