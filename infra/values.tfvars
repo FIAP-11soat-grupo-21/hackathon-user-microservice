@@ -14,8 +14,9 @@ container_environment_variables = {
   AWS_REGION : "us-east-2"
 
   DB_RUN_MIGRATIONS : "true"
-  DB_NAME : "payment_db"
+  DB_NAME : "user_db"
   DB_PORT : "5432"
+  DB_USERNAME : "adminuser"
 }
 
 container_secrets = {}
