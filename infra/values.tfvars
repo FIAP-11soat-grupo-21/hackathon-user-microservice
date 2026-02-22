@@ -1,7 +1,7 @@
 application_name = "user-api"
 image_name       = "GHCR_IMAGE_TAG"
 image_port       = 8083
-app_path_pattern = ["/users*"]
+app_path_pattern = ["/users*", "/users/*"]
 
 # =======================================================
 # Configurações do ECS Service
