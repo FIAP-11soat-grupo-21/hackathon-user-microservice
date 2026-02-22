@@ -44,8 +44,9 @@ module "GetUserAPIRoute" {
 
   endpoints = {
     get_user = {
-      route_key  = "GET /users/id/{id}"
-      restricted = false
+      route_key           = "GET /users/{id}"
+      restricted          = false
+      auth_integration_id = data.terraform_remote_state.auth.outputs.auth_id
     },
     get_all_users = {
       route_key           = "GET /users"
@@ -53,8 +54,9 @@ module "GetUserAPIRoute" {
       auth_integration_id = data.terraform_remote_state.auth.outputs.auth_id
     },
     create_user = {
-      route_key  = "POST /users"
-      restricted = false
+      route_key           = "POST /users"
+      restricted          = false
+      auth_integration_id = data.terraform_remote_state.auth.outputs.auth_id
     },
     update_user = {
       route_key           = "PUT /users/{id}"
