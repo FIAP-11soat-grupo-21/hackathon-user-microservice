@@ -18,7 +18,7 @@ container_environment_variables = {
   DB_RUN_MIGRATIONS : "true"
   DB_NAME : "user_db"
   DB_PORT : "5432"
-  DB_USERNAME : "adminuser"
+  DB_USERNAME : "postgres"
 }
 
 container_secrets = {}
