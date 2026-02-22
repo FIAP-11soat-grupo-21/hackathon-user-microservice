@@ -102,6 +102,11 @@ jobs:
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Adjust tfvars with image tag
+        working-directory: infra
+        run: |
+          sed -i -e "s|GHCR_IMAGE_TAG|${IMAGE}|g" values.tfvars
+
       - name: Terraform Init
         working-directory: infra
         run: |
