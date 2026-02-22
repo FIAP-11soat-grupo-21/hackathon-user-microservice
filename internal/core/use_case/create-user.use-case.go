@@ -9,12 +9,14 @@ import (
 )
 
 type CreateUserUseCase struct {
-	repository port.IUserRepository
+	repository  port.IUserRepository
+	authService port.IAuthService
 }
 
-func NewCreateUserUseCase(repository port.IUserRepository) *CreateUserUseCase {
+func NewCreateUserUseCase(repository port.IUserRepository, authService port.IAuthService) *CreateUserUseCase {
 	return &CreateUserUseCase{
-		repository: repository,
+		repository:  repository,
+		authService: authService,
 	}
 }
 
@@ -45,6 +47,17 @@ func (c *CreateUserUseCase) Execute(userDTO dto.CreateUserDTO) (entity.User, err
 	}
 
 	err = c.repository.Insert(*user)
+
+	if err != nil {
+		return entity.User{}, err
+	}
+
+	err = c.authService.RegisterUser(dto.RegisterUserDTO{
+		Email: user.Email.Value(),
+		// Usar a senha sem criptografia,
+		// pois o serviço de autenticação utiliza uma função de hash própria.
+		Password: userDTO.Password,
+	})
 
 	if err != nil {
 		return entity.User{}, err

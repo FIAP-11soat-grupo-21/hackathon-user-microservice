@@ -11,11 +11,15 @@ import (
 )
 
 type UserHandler struct {
-	repository port.IUserRepository
+	repository  port.IUserRepository
+	authService port.IAuthService
 }
 
-func NewUserHandler(repository port.IUserRepository) *UserHandler {
-	return &UserHandler{repository: repository}
+func NewUserHandler(repository port.IUserRepository, authService port.IAuthService) *UserHandler {
+	return &UserHandler{
+		repository:  repository,
+		authService: authService,
+	}
 }
 
 func (uh *UserHandler) CreateUser(ctx *gin.Context) {
@@ -32,7 +36,7 @@ func (uh *UserHandler) CreateUser(ctx *gin.Context) {
 		Password: requestBody.Password,
 	}
 
-	createUserUseCase := use_case.NewCreateUserUseCase(uh.repository)
+	createUserUseCase := use_case.NewCreateUserUseCase(uh.repository, uh.authService)
 
 	newUser, err := createUserUseCase.Execute(userDTO)
 
@@ -110,7 +114,7 @@ func (uh *UserHandler) UpdateUser(ctx *gin.Context) {
 		Email: requestBody.Email,
 	}
 
-	updateUserUseCase := use_case.NewUpdateUserUseCase(uh.repository)
+	updateUserUseCase := use_case.NewUpdateUserUseCase(uh.repository, uh.authService)
 
 	updatedUser, err := updateUserUseCase.Execute(userDTO)
 
@@ -143,7 +147,7 @@ func (uh *UserHandler) UpdateUserPassword(ctx *gin.Context) {
 		NewPassword: requestBody.NewPassword,
 	}
 
-	updateUserPasswordUseCase := use_case.NewUpdateUserPasswordUseCase(uh.repository)
+	updateUserPasswordUseCase := use_case.NewUpdateUserPasswordUseCase(uh.repository, uh.authService)
 
 	err := updateUserPasswordUseCase.Execute(userDTO)
 
@@ -158,7 +162,7 @@ func (uh *UserHandler) UpdateUserPassword(ctx *gin.Context) {
 func (uh *UserHandler) DeleteUser(ctx *gin.Context) {
 	id := ctx.Param("id")
 
-	deleteUserUseCase := use_case.NewDeleteUserUseCase(uh.repository)
+	deleteUserUseCase := use_case.NewDeleteUserUseCase(uh.repository, uh.authService)
 
 	err := deleteUserUseCase.Execute(id)
 
@@ -173,7 +177,7 @@ func (uh *UserHandler) DeleteUser(ctx *gin.Context) {
 func (uh *UserHandler) RestoreUser(ctx *gin.Context) {
 	id := ctx.Param("id")
 
-	restoreUserUseCase := use_case.NewRestoreUserUseCase(uh.repository)
+	restoreUserUseCase := use_case.NewRestoreUserUseCase(uh.repository, uh.authService)
 
 	err := restoreUserUseCase.Execute(id)
 

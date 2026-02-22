@@ -8,12 +8,14 @@ import (
 )
 
 type UpdateUserPasswordUseCase struct {
-	repository port.IUserRepository
+	repository  port.IUserRepository
+	authService port.IAuthService
 }
 
-func NewUpdateUserPasswordUseCase(repository port.IUserRepository) *UpdateUserPasswordUseCase {
+func NewUpdateUserPasswordUseCase(repository port.IUserRepository, authService port.IAuthService) *UpdateUserPasswordUseCase {
 	return &UpdateUserPasswordUseCase{
-		repository: repository,
+		repository:  repository,
+		authService: authService,
 	}
 }
 
@@ -43,6 +45,12 @@ func (u *UpdateUserPasswordUseCase) Execute(dto dto.UpdateUserPasswordDTO) error
 	}
 
 	err = u.repository.Update(user)
+
+	if err != nil {
+		return err
+	}
+
+	err = u.authService.UpdateUserPassword(user.Email.Value(), dto.NewPassword)
 
 	if err != nil {
 		return err

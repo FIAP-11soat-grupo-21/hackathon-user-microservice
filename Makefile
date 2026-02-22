@@ -1,21 +1,21 @@
 .PHONY: run dev docker build test coverage coverage-html
 
 # Variables
-BINARY_NAME=main
+ENTRY_POINT=cmd/http/main.go
 COVERAGE_FILE=coverage.out
 COVERAGE_HTML=coverage.html
 
 run:
-	go run cmd/main.go
+	go run $(ENTRY_POINT)
 
 dev:
-	go run -gcflags=all="-N -l" cmd/main.go
+	go run -gcflags=all="-N -l" $(ENTRY_POINT)
 
 docker:
 	docker compose up --build -d
 
 build:
-	go build -o $(BINARY_NAME) .
+	go build $(ENTRY_POINT)
 
 test:
 	go test -v ./...

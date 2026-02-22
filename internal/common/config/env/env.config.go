@@ -25,6 +25,12 @@ type Config struct {
 		Username      string
 		Password      string
 	}
+	AWS struct {
+		Region  string
+		Cognito struct {
+			UserPoolId string
+		}
+	}
 }
 
 var (
@@ -83,6 +89,12 @@ func (c *Config) Load() {
 	c.Database.Port = getEnv("DB_PORT")
 	c.Database.Username = getEnv("DB_USERNAME")
 	c.Database.Password = getEnv("DB_PASSWORD")
+
+	// AWS
+	c.AWS.Region = getEnv("AWS_REGION")
+
+	// AWS Cognito
+	c.AWS.Cognito.UserPoolId = getEnv("AWS_COGNITO_USER_POOL_ID")
 }
 
 func (c *Config) IsProduction() bool {

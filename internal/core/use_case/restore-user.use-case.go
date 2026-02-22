@@ -6,12 +6,14 @@ import (
 )
 
 type RestoreUserUseCase struct {
-	repository port.IUserRepository
+	repository  port.IUserRepository
+	authService port.IAuthService
 }
 
-func NewRestoreUserUseCase(repository port.IUserRepository) *RestoreUserUseCase {
+func NewRestoreUserUseCase(repository port.IUserRepository, authService port.IAuthService) *RestoreUserUseCase {
 	return &RestoreUserUseCase{
-		repository: repository,
+		repository:  repository,
+		authService: authService,
 	}
 }
 
@@ -23,6 +25,12 @@ func (u *RestoreUserUseCase) Execute(id string) error {
 	}
 
 	err = u.repository.Restore(id)
+
+	if err != nil {
+		return err
+	}
+
+	err = u.authService.RestoreUser(id)
 
 	if err != nil {
 		return err

@@ -6,12 +6,14 @@ import (
 )
 
 type DeleteUserUseCase struct {
-	repository port.IUserRepository
+	repository  port.IUserRepository
+	authService port.IAuthService
 }
 
-func NewDeleteUserUseCase(repository port.IUserRepository) *DeleteUserUseCase {
+func NewDeleteUserUseCase(repository port.IUserRepository, authService port.IAuthService) *DeleteUserUseCase {
 	return &DeleteUserUseCase{
-		repository: repository,
+		repository:  repository,
+		authService: authService,
 	}
 }
 
@@ -23,6 +25,12 @@ func (u *DeleteUserUseCase) Execute(id string) error {
 	}
 
 	err = u.repository.Delete(id)
+
+	if err != nil {
+		return err
+	}
+
+	err = u.authService.DeleteUser(id)
 
 	if err != nil {
 		return err

@@ -9,7 +9,9 @@ import (
 
 func RegisterUserRoutes(router *gin.RouterGroup) {
 	userRepository := factory.NewUserRepository()
-	userHandler := handler.NewUserHandler(userRepository)
+	authService := factory.NewAuthService()
+
+	userHandler := handler.NewUserHandler(userRepository, authService)
 
 	router.POST("/", userHandler.CreateUser)
 	router.GET("/", userHandler.FindAllUsers)
