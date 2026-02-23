@@ -13,7 +13,8 @@ func RegisterUserRoutes(router *gin.RouterGroup) {
 
 	userHandler := handler.NewUserHandler(userRepository, authService)
 
-	router.POST("/", userHandler.CreateUser)
+	// Usando /register para corrigir problema com o API Gateway da AWS
+	router.POST("/register", userHandler.CreateUser)
 	router.GET("/", userHandler.FindAllUsers)
 	router.GET("/:id", userHandler.FindUserByID)
 	router.PUT("/:id", userHandler.UpdateUser)

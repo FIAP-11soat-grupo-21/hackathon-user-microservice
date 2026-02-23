@@ -54,9 +54,8 @@ module "GetUserAPIRoute" {
       auth_integration_id = data.terraform_remote_state.auth.outputs.auth_id
     },
     create_user = {
-      route_key           = "POST /users"
+      route_key           = "POST /users/register"
       restricted          = false
-      auth_integration_id = data.terraform_remote_state.auth.outputs.auth_id
     },
     update_user = {
       route_key           = "PUT /users/{id}"
