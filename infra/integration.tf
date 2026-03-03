@@ -15,9 +15,9 @@ resource "aws_alb_target_group" "target_group" {
     unhealthy_threshold = 2
   }
 
-  tags = {
-    Name = "${var.application_name}-target-group"
-  }
+  tags = merge(
+    { Name = "${var.application_name}-target-group" }, data.terraform_remote_state.app_registry.outputs.app_registry_application_tag
+  )
 }
 
 resource "aws_lb_listener" "listener" {
@@ -32,10 +32,11 @@ resource "aws_lb_listener" "listener" {
     target_group_arn = aws_alb_target_group.target_group.arn
   }
 
-  tags = {
-    Name = "${var.application_name}-listener"
-  }
+  tags = merge(
+    { Name = "${var.application_name}-listener" }, data.terraform_remote_state.app_registry.outputs.app_registry_application_tag
+  )
 }
+
 
 resource "aws_alb_listener_rule" "rule" {
   depends_on = [aws_lb_listener.listener, aws_alb_target_group.target_group]

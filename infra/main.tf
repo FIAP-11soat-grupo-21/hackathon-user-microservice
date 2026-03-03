@@ -33,6 +33,8 @@ module "user_api" {
   task_role_policy_arns   = var.task_role_policy_arns
   alb_target_group_arn    = aws_alb_target_group.target_group.arn
   alb_security_group_id   = data.terraform_remote_state.alb.outputs.alb_security_group_id
+
+  project_common_tags = data.terraform_remote_state.app_registry.outputs.app_registry_application_tag
 }
 
 module "GetUserAPIRoute" {
@@ -54,8 +56,8 @@ module "GetUserAPIRoute" {
       auth_integration_id = data.terraform_remote_state.auth.outputs.auth_id
     },
     create_user = {
-      route_key           = "POST /users"
-      restricted          = false
+      route_key  = "POST /users"
+      restricted = false
     },
     create_user_proxy = {
       route_key           = "POST /users/{proxy+}"
