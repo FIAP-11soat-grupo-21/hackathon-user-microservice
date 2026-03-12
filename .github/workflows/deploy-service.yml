@@ -30,11 +30,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
-
-      - name: Install Go coverage dependencies
-        run: |
-          go install golang.org/x/tools/go/cover@latest
+          go-version: "1.25.x"
 
       - name: Clean workspace
         run: |
@@ -44,7 +40,7 @@ jobs:
       - name: Run tests with coverage
         working-directory: internal
         env:
-          GO_ENV: testing
+          GO_ENV: test
         run: |
           go test ./... -coverprofile=coverage.out
 

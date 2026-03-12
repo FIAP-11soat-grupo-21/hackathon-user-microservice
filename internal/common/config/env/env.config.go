@@ -73,7 +73,7 @@ func (c *Config) Load() {
 		}
 	}
 
-	c.GoEnv = getEnv("GO_ENV")
+	c.GoEnv = getEnvWithDefault("GO_ENV", "development")
 
 	// API
 	c.API.Port = getEnvWithDefault("API_PORT", "8080")
