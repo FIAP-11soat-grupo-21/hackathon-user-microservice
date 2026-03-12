@@ -18,7 +18,7 @@ jobs:
     name: SonarCloud Scan
     runs-on: ubuntu-latest
     env:
-      SONAR_PROJECT_KEY: "FIAP-11soat-grupo-21_hackathon-auth-microservice"
+      SONAR_PROJECT_KEY: "FIAP-11soat-grupo-21_hackathon-user-microservice"
       SONAR_ORGANIZATION: "fiap-11soat-grupo-21"
 
     steps:
