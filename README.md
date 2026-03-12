@@ -34,6 +34,42 @@ Estrutura principal:
 - Go instalado
 - Docker e Docker Compose (opcional para execução em containers)
 
+## Variáveis de ambiente
+
+Para rodar o serviço localmente, crie um arquivo `.env` na raiz do projeto com as variáveis abaixo.
+
+| Variável | Obrigatória | Exemplo | Descrição |
+|---|---|---|---|
+| `APP_PORT` | Sim | `8080` | Porta HTTP da aplicação. |
+| `DB_HOST` | Sim | `localhost` | Host do banco de dados. |
+| `DB_PORT` | Sim | `5432` | Porta do banco de dados. |
+| `DB_NAME` | Sim | `user_microservice` | Nome do banco. |
+| `DB_USER` | Sim | `postgres` | Usuário do banco. |
+| `DB_PASSWORD` | Sim | `postgres` | Senha do banco. |
+| `AWS_REGION` | Não* | `us-east-1` | Região AWS usada em integrações. |
+| `COGNITO_USER_POOL_ID` | Não* | `us-east-1_xxxxxxxx` | User Pool do Cognito. |
+| `COGNITO_CLIENT_ID` | Não* | `xxxxxxxxxxxxxxxxxxxxxxxxxx` | Client ID do app no Cognito. |
+
+* Obrigatória apenas quando as integrações AWS/Cognito estiverem habilitadas no ambiente local.
+
+Exemplo de `.env`:
+
+```env
+APP_PORT=8080
+
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=user_microservice
+DB_USER=postgres
+DB_PASSWORD=postgres
+
+AWS_REGION=us-east-1
+COGNITO_USER_POOL_ID=us-east-1_xxxxxxxx
+COGNITO_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+> Dica: não versione o `.env`; mantenha um `.env.example` atualizado com valores de exemplo.
+
 ## Como executar
 
 Os comandos abaixo estão definidos no `Makefile`.
@@ -80,6 +116,55 @@ Cobertura em HTML:
 make coverage-html
 ```
 
+## Pipeline do projeto
+
+Fluxo recomendado para desenvolvimento e validação local:
+
+1. Configurar variáveis de ambiente (`.env`).
+2. Compilar o projeto para validar build.
+3. Executar testes automatizados.
+4. Verificar cobertura de testes.
+5. Subir a aplicação localmente.
+6. Acompanhar indicadores de qualidade no SonarCloud (badges no topo do README).
+
+Exemplo de sequência:
+
+```bash
+make build
+make test
+make coverage
+make run
+```
+
+Para execução via container:
+
+```bash
+make docker
+```
+
+## Funções disponíveis
+
+As funções abaixo estão disponíveis no `Makefile`:
+
+- `make run`: executa a aplicação (`go run cmd/http/main.go`).
+- `make dev`: executa em modo debug (`-gcflags=all="-N -l"`).
+- `make docker`: sobe os serviços com Docker Compose (`up --build -d`).
+- `make build`: gera build da aplicação.
+- `make test`: executa todos os testes (`go test -v ./...`).
+- `make coverage`: calcula cobertura com `coverage.out`.
+- `make coverage-html`: gera relatório HTML de cobertura.
+- `sonar-scanner`: executa análise SonarCloud manual (quando configurado).
+
+### Pipeline de qualidade (SonarCloud)
+
+Os badges no topo refletem os principais indicadores de qualidade:
+- Quality Gate
+- Coverage
+- Bugs
+- Vulnerabilities
+- Code Smells
+- Technical Debt
+
 ## Qualidade de código (SonarCloud)
 
 Configuração atual em `sonar-project.properties`:
@@ -88,17 +173,3 @@ Configuração atual em `sonar-project.properties`:
 - `sonar.projectKey=FIAP-11soat-grupo-21_hackathon-auth-microservice`
 
 > Observação: o `projectKey` atual referencia `hackathon-auth-microservice`. Se este repositório deve ser analisado com chave específica de `user-microservice`, ajuste o valor no `sonar-project.properties`.
-
-## SonarScanner (exemplo)
-
-Se quiser rodar análise local/manual (com token configurado no ambiente):
-
-```bash
-sonar-scanner
-```
-
-## Próximos ajustes recomendados
-
-- Definir e documentar variáveis de ambiente necessárias para execução local.
-- Confirmar/corrigir `sonar.projectKey` para refletir este repositório.
-- Adicionar pipeline CI para executar testes e análise SonarCloud automaticamente.
