@@ -8,7 +8,25 @@ import (
 )
 
 func TestFindAllUsersUseCase(t *testing.T) {
+	// Testes de erro
+	errorTests := []ErrorTestCase{
+		{
+			Name:          "should return error if repository fails",
+			Input:         nil,
+			ExpectedError: "database connection error",
+			SetupFunc: func() (interface{}, interface{}) {
+				return &fakeUserRepository{listAllErr: fmt.Errorf("database connection error")}, nil
+			},
+		},
+	}
 
+	runErrorTests(t, errorTests, func(repo, auth, input interface{}) error {
+		useCase := NewFindAllUsersUseCase(repo.(*fakeUserRepository))
+		_, err := useCase.Execute()
+		return err
+	})
+
+	// Testes de sucesso
 	t.Run("should return all users successfully", func(t *testing.T) {
 		name, _ := value_object.NewName("John Doe")
 		email, _ := value_object.NewEmail("john.doe@fakemail.com")
@@ -46,19 +64,6 @@ func TestFindAllUsersUseCase(t *testing.T) {
 
 		if len(users) != 0 {
 			t.Errorf("Expected 0 users, got %d", len(users))
-		}
-	})
-
-	t.Run("should return error if repository fails", func(t *testing.T) {
-		repo := &fakeUserRepository{
-			listAllErr: fmt.Errorf("database connection error"),
-		}
-		useCase := NewFindAllUsersUseCase(repo)
-
-		_, err := useCase.Execute()
-
-		if err == nil || err.Error() != "database connection error" {
-			t.Errorf("Expected error 'database connection error', got %v", err)
 		}
 	})
 }

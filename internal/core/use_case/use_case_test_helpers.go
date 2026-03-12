@@ -12,13 +12,6 @@ type ErrorTestCase struct {
 	SetupFunc     func() (interface{}, interface{}) // Returns (repo, auth)
 }
 
-// SuccessTestCase representa um teste que deve ser bem-sucedido
-type SuccessTestCase struct {
-	Name      string
-	Input     interface{}
-	SetupFunc func() (interface{}, interface{}) // Returns (repo, auth)
-}
-
 // runErrorTests executa testes que devem resultar em erro
 func runErrorTests(t *testing.T, testCases []ErrorTestCase, executor func(interface{}, interface{}, interface{}) error) {
 	t.Helper()
@@ -40,40 +33,11 @@ func runErrorTests(t *testing.T, testCases []ErrorTestCase, executor func(interf
 	}
 }
 
-// runSuccessTests executa testes que devem ser bem-sucedidos
-func runSuccessTests(t *testing.T, testCases []SuccessTestCase, executor func(interface{}, interface{}, interface{}) error) {
-	t.Helper()
-
-	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			repo, auth := tc.SetupFunc()
-			err := executor(repo, auth, tc.Input)
-
-			if err != nil {
-				t.Errorf("Expected no error, got %v", err)
-			}
-		})
-	}
-}
-
 // CreateUserTestInput representa os inputs para teste de criação de usuário
 type CreateUserTestInput struct {
 	Name     string
 	Email    string
 	Password string
-}
-
-// UpdateUserTestInput representa os inputs para teste de atualização de usuário
-type UpdateUserTestInput struct {
-	ID    string
-	Name  string
-	Email string
-}
-
-// UpdatePasswordTestInput representa os inputs para teste de atualização de senha
-type UpdatePasswordTestInput struct {
-	ID          string
-	NewPassword string
 }
 
 // IDTestInput representa entrada apenas com ID

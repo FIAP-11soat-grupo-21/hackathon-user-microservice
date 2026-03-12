@@ -175,6 +175,45 @@ func TestUpdateUserUseCase(t *testing.T) {
 		}
 	})
 
+	t.Run("should return error if new email is invalid", func(t *testing.T) {
+		existing := makeUser(validUUID, "John Doe", "john.doe@fakemail.com")
+		repo := &fakeUserRepository{
+			findByIDResult: existing,
+		}
+		auth := &fakeAuthService{}
+		useCase := NewUpdateUserUseCase(repo, auth)
+
+		_, err := useCase.Execute(dto.UpdateUserDTO{
+			ID:    validUUID,
+			Name:  "John Doe",
+			Email: "invalid-email",
+		})
+
+		if err == nil {
+			t.Error("Expected error for invalid email, got nil")
+		}
+	})
+
+	t.Run("should return error if ExistsByEmail fails during email update", func(t *testing.T) {
+		existing := makeUser(validUUID, "John Doe", "john.doe@fakemail.com")
+		repo := &fakeUserRepository{
+			findByIDResult:   existing,
+			existsByEmailErr: fmt.Errorf("database connection error"),
+		}
+		auth := &fakeAuthService{}
+		useCase := NewUpdateUserUseCase(repo, auth)
+
+		_, err := useCase.Execute(dto.UpdateUserDTO{
+			ID:    validUUID,
+			Name:  "John Doe",
+			Email: "new.email@fakemail.com",
+		})
+
+		if err == nil || err.Error() != "database connection error" {
+			t.Errorf("Expected 'database connection error', got %v", err)
+		}
+	})
+
 	t.Run("should return error if auth service UpdateUserEmail fails", func(t *testing.T) {
 		existing := makeUser(validUUID, "John Doe", "john.doe@fakemail.com")
 		repo := &fakeUserRepository{

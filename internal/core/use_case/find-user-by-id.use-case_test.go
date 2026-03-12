@@ -24,7 +24,40 @@ func makeUserWithPassword(id, name, email, password string) entity.User {
 }
 
 func TestFindUserByIDUseCase(t *testing.T) {
+	// Testes de erro
+	errorTests := []ErrorTestCase{
+		{
+			Name:          "should return error if ID is invalid",
+			Input:         IDTestInput{ID: invalidUUID},
+			ExpectedError: "Invalid user ID",
+			SetupFunc:     func() (interface{}, interface{}) { return &fakeUserRepository{}, nil },
+		},
+		{
+			Name:          "should return error if user not found",
+			Input:         IDTestInput{ID: validUUID},
+			ExpectedError: "User not found",
+			SetupFunc: func() (interface{}, interface{}) {
+				return &fakeUserRepository{findByIDResult: entity.User{}}, nil
+			},
+		},
+		{
+			Name:          "should return error if repository fails",
+			Input:         IDTestInput{ID: validUUID},
+			ExpectedError: "database connection error",
+			SetupFunc: func() (interface{}, interface{}) {
+				return &fakeUserRepository{findByIDErr: fmt.Errorf("database connection error")}, nil
+			},
+		},
+	}
 
+	runErrorTests(t, errorTests, func(repo, auth, input interface{}) error {
+		useCase := NewFindUserByIDUseCase(repo.(*fakeUserRepository))
+		testInput := input.(IDTestInput)
+		_, err := useCase.Execute(testInput.ID)
+		return err
+	})
+
+	// Teste de sucesso
 	t.Run("should return user successfully", func(t *testing.T) {
 		expected := makeUser(validUUID, "John Doe", "john.doe@fakemail.com")
 		repo := &fakeUserRepository{
@@ -40,43 +73,6 @@ func TestFindUserByIDUseCase(t *testing.T) {
 
 		if user.ID != expected.ID {
 			t.Errorf("Expected user ID '%s', got '%s'", expected.ID, user.ID)
-		}
-	})
-
-	t.Run("should return error if ID is invalid", func(t *testing.T) {
-		repo := &fakeUserRepository{}
-		useCase := NewFindUserByIDUseCase(repo)
-
-		_, err := useCase.Execute(invalidUUID)
-
-		if err == nil || err.Error() != "Invalid user ID" {
-			t.Errorf("Expected 'Invalid user ID', got %v", err)
-		}
-	})
-
-	t.Run("should return error if user not found", func(t *testing.T) {
-		repo := &fakeUserRepository{
-			findByIDResult: entity.User{},
-		}
-		useCase := NewFindUserByIDUseCase(repo)
-
-		_, err := useCase.Execute(validUUID)
-
-		if err == nil || err.Error() != "User not found" {
-			t.Errorf("Expected 'User not found', got %v", err)
-		}
-	})
-
-	t.Run("should return error if repository fails", func(t *testing.T) {
-		repo := &fakeUserRepository{
-			findByIDErr: fmt.Errorf("database connection error"),
-		}
-		useCase := NewFindUserByIDUseCase(repo)
-
-		_, err := useCase.Execute(validUUID)
-
-		if err == nil || err.Error() != "database connection error" {
-			t.Errorf("Expected 'database connection error', got %v", err)
 		}
 	})
 }

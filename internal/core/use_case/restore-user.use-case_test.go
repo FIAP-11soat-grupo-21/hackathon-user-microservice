@@ -6,7 +6,39 @@ import (
 )
 
 func TestRestoreUserUseCase(t *testing.T) {
+	// Testes de erro
+	errorTests := []ErrorTestCase{
+		{
+			Name:          "should return error if ID is invalid",
+			Input:         IDTestInput{ID: invalidUUID},
+			ExpectedError: "Invalid user ID",
+			SetupFunc:     func() (interface{}, interface{}) { return &fakeUserRepository{}, &fakeAuthService{} },
+		},
+		{
+			Name:          "should return error if repository restore fails",
+			Input:         IDTestInput{ID: validUUID},
+			ExpectedError: "failed to restore user",
+			SetupFunc: func() (interface{}, interface{}) {
+				return &fakeUserRepository{restoreErr: fmt.Errorf("failed to restore user")}, &fakeAuthService{}
+			},
+		},
+		{
+			Name:          "should return error if auth service restore fails",
+			Input:         IDTestInput{ID: validUUID},
+			ExpectedError: "auth service unavailable",
+			SetupFunc: func() (interface{}, interface{}) {
+				return &fakeUserRepository{}, &fakeAuthService{restoreUserErr: fmt.Errorf("auth service unavailable")}
+			},
+		},
+	}
 
+	runErrorTests(t, errorTests, func(repo, auth, input interface{}) error {
+		useCase := NewRestoreUserUseCase(repo.(*fakeUserRepository), auth.(*fakeAuthService))
+		testInput := input.(IDTestInput)
+		return useCase.Execute(testInput.ID)
+	})
+
+	// Teste de sucesso
 	t.Run("should restore user successfully", func(t *testing.T) {
 		repo := &fakeUserRepository{}
 		auth := &fakeAuthService{}
@@ -24,46 +56,6 @@ func TestRestoreUserUseCase(t *testing.T) {
 
 		if !auth.restoreUserCalled {
 			t.Error("Expected RestoreUser to be called on the auth service")
-		}
-	})
-
-	t.Run("should return error if ID is invalid", func(t *testing.T) {
-		repo := &fakeUserRepository{}
-		auth := &fakeAuthService{}
-		useCase := NewRestoreUserUseCase(repo, auth)
-
-		err := useCase.Execute(invalidUUID)
-
-		if err == nil || err.Error() != "Invalid user ID" {
-			t.Errorf("Expected 'Invalid user ID', got %v", err)
-		}
-	})
-
-	t.Run("should return error if repository restore fails", func(t *testing.T) {
-		repo := &fakeUserRepository{
-			restoreErr: fmt.Errorf("failed to restore user"),
-		}
-		auth := &fakeAuthService{}
-		useCase := NewRestoreUserUseCase(repo, auth)
-
-		err := useCase.Execute(validUUID)
-
-		if err == nil || err.Error() != "failed to restore user" {
-			t.Errorf("Expected 'failed to restore user', got %v", err)
-		}
-	})
-
-	t.Run("should return error if auth service restore fails", func(t *testing.T) {
-		repo := &fakeUserRepository{}
-		auth := &fakeAuthService{
-			restoreUserErr: fmt.Errorf("auth service unavailable"),
-		}
-		useCase := NewRestoreUserUseCase(repo, auth)
-
-		err := useCase.Execute(validUUID)
-
-		if err == nil || err.Error() != "auth service unavailable" {
-			t.Errorf("Expected 'auth service unavailable', got %v", err)
 		}
 	})
 }
