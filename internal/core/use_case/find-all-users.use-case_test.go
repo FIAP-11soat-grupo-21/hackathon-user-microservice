@@ -4,11 +4,19 @@ import (
 	"fmt"
 	"testing"
 	"user_microservice/internal/core/domain/entity"
-	"user_microservice/internal/core/domain/value_object"
 )
 
+// Helper function to create a list of test users
+func makeTestUserList(count int) []entity.User {
+	users := make([]entity.User, count)
+	for i := 0; i < count; i++ {
+		users[i] = makeUser(fmt.Sprintf("user-id-%d", i+1), "John Doe", "john.doe@fakemail.com")
+	}
+	return users
+}
+
 func TestFindAllUsersUseCase(t *testing.T) {
-	// Testes de erro
+	// Error tests
 	errorTests := []ErrorTestCase{
 		{
 			Name:          "should return error if repository fails",
@@ -26,44 +34,41 @@ func TestFindAllUsersUseCase(t *testing.T) {
 		return err
 	})
 
-	// Testes de sucesso
-	t.Run("should return all users successfully", func(t *testing.T) {
-		name, _ := value_object.NewName("John Doe")
-		email, _ := value_object.NewEmail("john.doe@fakemail.com")
-
-		repo := &fakeUserRepository{
-			listAllResult: []entity.User{
-				{ID: "some-id-1", Name: name, Email: email},
-				{ID: "some-id-2", Name: name, Email: email},
+	// Success tests
+	successTests := []struct {
+		name          string
+		setupRepo     func() *fakeUserRepository
+		expectedCount int
+	}{
+		{
+			name: "should return all users successfully",
+			setupRepo: func() *fakeUserRepository {
+				return &fakeUserRepository{listAllResult: makeTestUserList(2)}
 			},
-		}
-		useCase := NewFindAllUsersUseCase(repo)
+			expectedCount: 2,
+		},
+		{
+			name: "should return empty list when no users exist",
+			setupRepo: func() *fakeUserRepository {
+				return &fakeUserRepository{listAllResult: []entity.User{}}
+			},
+			expectedCount: 0,
+		},
+	}
 
-		users, err := useCase.Execute()
+	for _, tt := range successTests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := tt.setupRepo()
+			useCase := NewFindAllUsersUseCase(repo)
 
-		if err != nil {
-			t.Errorf("Expected no error, got %v", err)
-		}
+			users, err := useCase.Execute()
 
-		if len(users) != 2 {
-			t.Errorf("Expected 2 users, got %d", len(users))
-		}
-	})
-
-	t.Run("should return empty list when no users exist", func(t *testing.T) {
-		repo := &fakeUserRepository{
-			listAllResult: []entity.User{},
-		}
-		useCase := NewFindAllUsersUseCase(repo)
-
-		users, err := useCase.Execute()
-
-		if err != nil {
-			t.Errorf("Expected no error, got %v", err)
-		}
-
-		if len(users) != 0 {
-			t.Errorf("Expected 0 users, got %d", len(users))
-		}
-	})
+			if err != nil {
+				t.Errorf("Expected no error, got %v", err)
+			}
+			if len(users) != tt.expectedCount {
+				t.Errorf("Expected %d users, got %d", tt.expectedCount, len(users))
+			}
+		})
+	}
 }

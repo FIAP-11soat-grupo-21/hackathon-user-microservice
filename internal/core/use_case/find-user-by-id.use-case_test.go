@@ -4,24 +4,7 @@ import (
 	"fmt"
 	"testing"
 	"user_microservice/internal/core/domain/entity"
-	"user_microservice/internal/core/domain/value_object"
 )
-
-const validUUID = "018f4e4a-1c9b-7f3a-8b2d-1a2b3c4d5e6f"
-const invalidUUID = "not-a-valid-uuid"
-
-func makeUser(id, name, email string) entity.User {
-	n, _ := value_object.NewName(name)
-	e, _ := value_object.NewEmail(email)
-	return entity.User{ID: id, Name: n, Email: e}
-}
-
-func makeUserWithPassword(id, name, email, password string) entity.User {
-	n, _ := value_object.NewName(name)
-	e, _ := value_object.NewEmail(email)
-	p, _ := value_object.NewPassword(password)
-	return entity.User{ID: id, Name: n, Email: e, Password: p}
-}
 
 func TestFindUserByIDUseCase(t *testing.T) {
 	// Testes de erro
