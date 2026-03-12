@@ -32,6 +32,10 @@ jobs:
         with:
           go-version: "1.22"
 
+      - name: Install Go coverage dependencies
+        run: |
+          go install golang.org/x/tools/go/cover@latest
+
       - name: Clean workspace
         run: |
           rm -rf .scannerwork || true
@@ -39,6 +43,8 @@ jobs:
 
       - name: Run tests with coverage
         working-directory: internal
+        env:
+          GO_ENV: testing
         run: |
           go test ./... -coverprofile=coverage.out
 
