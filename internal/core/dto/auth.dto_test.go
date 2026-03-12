@@ -11,24 +11,15 @@ func TestRegisterUserDTO(t *testing.T) {
 			Password: "Password123@",
 		}
 
-		if dto.Email != "john.doe@example.com" {
-			t.Errorf("Expected Email to be 'john.doe@example.com', got '%s'", dto.Email)
+		expectedFields := map[string]string{
+			"Email":    "john.doe@example.com",
+			"Password": "Password123@",
 		}
-
-		if dto.Password != "Password123@" {
-			t.Errorf("Expected Password to be 'Password123@', got '%s'", dto.Password)
-		}
+		testDTOWithFields(t, dto, expectedFields)
 	})
 
 	t.Run("Should create RegisterUserDTO with empty fields", func(t *testing.T) {
 		dto := RegisterUserDTO{}
-
-		if dto.Email != "" {
-			t.Errorf("Expected Email to be empty, got '%s'", dto.Email)
-		}
-
-		if dto.Password != "" {
-			t.Errorf("Expected Password to be empty, got '%s'", dto.Password)
-		}
+		testEmptyDTO(t, dto)
 	})
 }
