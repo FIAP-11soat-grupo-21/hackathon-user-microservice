@@ -54,6 +54,14 @@ func getEnv(key string) string {
 	return value
 }
 
+func getEnvWithDefault(key, defaultValue string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	return value
+}
+
 func (c *Config) Load() {
 	dotEnvPath := ".env"
 	_, err := os.Stat(dotEnvPath)
@@ -65,15 +73,15 @@ func (c *Config) Load() {
 		}
 	}
 
-	c.GoEnv = getEnv("GO_ENV")
+	c.GoEnv = getEnvWithDefault("GO_ENV", "development")
 
 	// API
-	c.API.Port = getEnv("API_PORT")
-	c.API.Host = getEnv("API_HOST")
+	c.API.Port = getEnvWithDefault("API_PORT", "8080")
+	c.API.Host = getEnvWithDefault("API_HOST", "0.0.0.0")
 	c.API.URL = c.API.Host + ":" + c.API.Port
 
 	// Password
-	rawSalt := getEnv("PASSWORD_SALT")
+	rawSalt := getEnvWithDefault("PASSWORD_SALT", "12")
 
 	i64, err := strconv.ParseInt(rawSalt, 10, 32)
 	if err != nil {
@@ -83,18 +91,18 @@ func (c *Config) Load() {
 	c.PasswordSalt = int(i64)
 
 	// Database
-	c.Database.RunMigrations = getEnv("DB_RUN_MIGRATIONS") == "true"
-	c.Database.Host = getEnv("DB_HOST")
-	c.Database.Name = getEnv("DB_NAME")
-	c.Database.Port = getEnv("DB_PORT")
-	c.Database.Username = getEnv("DB_USERNAME")
-	c.Database.Password = getEnv("DB_PASSWORD")
+	c.Database.RunMigrations = getEnvWithDefault("DB_RUN_MIGRATIONS", "false") == "true"
+	c.Database.Host = getEnvWithDefault("DB_HOST", "localhost")
+	c.Database.Name = getEnvWithDefault("DB_NAME", "postgres")
+	c.Database.Port = getEnvWithDefault("DB_PORT", "5432")
+	c.Database.Username = getEnvWithDefault("DB_USERNAME", "postgres")
+	c.Database.Password = getEnvWithDefault("DB_PASSWORD", "12345678")
 
 	// AWS
-	c.AWS.Region = getEnv("AWS_REGION")
+	c.AWS.Region = getEnvWithDefault("AWS_REGION", "us-east-2")
 
 	// AWS Cognito
-	c.AWS.Cognito.UserPoolId = getEnv("AWS_COGNITO_USER_POOL_ID")
+	c.AWS.Cognito.UserPoolId = getEnvWithDefault("AWS_COGNITO_USER_POOL_ID", "test-pool-id")
 }
 
 func (c *Config) IsProduction() bool {
